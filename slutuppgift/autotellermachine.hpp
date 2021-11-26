@@ -17,7 +17,7 @@ struct AutoTellerMachine
     //menu when you're in your account
     void    AccountMenu();
     //user log in
-    void    AccountLogin(int loginUserAccountNumber, string loginUsername, string loginPassword);
+    bool    AccountLogin(int loginUserAccountNumber, string loginUsername, string loginPassword);
     //user create an account
     void    CreateNewAccount(string newUsername, string newPassword);
     
