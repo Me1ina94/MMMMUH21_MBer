@@ -9,12 +9,13 @@
 #include "autotellermachine.hpp"
 
 using std::cout;
-using std::cin;
+using std::cin; 
 using std::string;
 using std::vector;
 using std::right;
 using std::left;
-using std::system;
+using std::system; 
+using std::setfill;
 
 
 /*DECLERATIONS*/
@@ -26,7 +27,7 @@ struct Table
     //Skapar tabellen som visar uttag och intag
     void    print_table(int accountNum);//
     //Skapar en ny rad på tabellen
-    string  insert_row();//
+    void  insert_row();//
 }table;
 struct Interface
 {
@@ -49,8 +50,8 @@ bool quit = false;
 void createAccount();
 bool logIn();
 void userIn(int userAccount);
-void getUsers();
-void saveCustomerData();
+void getUsersFromFile();
+void saveUsersToFile();
 void clearScreen();
 
 /*DECLERATIONS END*/
@@ -61,10 +62,11 @@ int main()
     ATM.loggedInAccountLocation = -1;
     char userChoice;
     bool start = true;
-    getUsers();
+    getUsersFromFile();
 
     while(start)
     {
+        intface.show_header();
         intface.show_options();
         cin >> userChoice;
         switch (toupper(userChoice))
@@ -76,10 +78,9 @@ int main()
                 {
                     userIn(ATM.loggedInAccountLocation);
                 }
-
                 if(quit)
                 {
-                    saveCustomerData();
+                    saveUsersToFile();
                     start = false;
                 }
                 break;
@@ -94,7 +95,7 @@ int main()
             case 'Q':
             {
                 cout << "You will now exit\n";
-                saveCustomerData();
+                saveUsersToFile();
                 start = false;
                 break;
             }
@@ -111,7 +112,7 @@ int main()
 
 /*FUNKTIONS*/
 
-void getUsers()
+void getUsersFromFile()
 {
     ifstream fin;
     fin.open("user_list.csv");
@@ -170,54 +171,23 @@ void getUsers()
 	fin.close();
 }
 
-void saveCustomerData()
-{
-    ofstream fout;
-    int firsttime = 0;
-    for (int i = 0; i < ATM_list.size(); i++)
-    {
-        if(firsttime == 0)
-        {
-            fout.open("user_list.csv", ios::trunc);
-            firsttime = 1;
-        }
-        else if(firsttime == 1)
-        {
-            fout.close();
-            fout.open("user_list.csv", ios::app);
-            firsttime == 2;
-        }
-        if(firsttime > 1)
-        {
-            fout << endl;
-        }
-        cout << ATM_list[i].accountNumber << "," << ATM_list[i].username << "," << ATM_list[i].password 
-             << "," << ATM_list[i].accountBalance << "," << ATM_list[i].lastMoneyMovement << "," 
-             << ATM_list[i].lastOperation << "," << ATM_list[i].beginningBalance << "\n";
-        fout << ATM_list[i].accountNumber << "," << ATM_list[i].username << "," << ATM_list[i].password 
-             << "," << ATM_list[i].accountBalance << "," << ATM_list[i].lastMoneyMovement << "," 
-             << ATM_list[i].lastOperation << "," << ATM_list[i].beginningBalance;
-        
-        _sleep(1000);
-    }
-    fout.close();
-
-}
-
-void clearScreen()
-{
-    system("cls");
-}
-
-
 bool logIn()
 {
     string loginName, loginPassword;
     int userAccountNumber;
     bool notCorrect = true, noAccount = true;
 
-    cout << "Log in\n\n";
-    cout << "Account number: ";
+    table.insert_row();
+    cout << "|" << left << setw(20) << setfill(' ') << "Log in " 
+         << right << setw(20) << setfill(' ') << "|" << endl;
+    table.insert_row();
+
+    //cout << "Log in\n\n";
+    //cout << "Account number: ";
+
+    cout << " " << left << setw(16) << setfill(' ') << "Account number: ";
+    cout << endl << "->";
+
     if( ! (cin >> userAccountNumber)) 
     {
         cin.clear();
@@ -228,12 +198,34 @@ bool logIn()
     {
         notCorrect = false;
     }
+
+    
+    // if( ! (cin >> userAccountNumber)) 
+    // {
+    //     cin.clear();
+    //     cout << "You have yo write the correct account number ex. 1000\n";
+    //     //error
+    // }
+    // else
+    // {
+    //     notCorrect = false;
+    // }
     if(!notCorrect)
     {
-        cout << "Username: ";
+        // cout << "Username: ";
+        // cin >> loginName;
+        // cout << "Passwordd: ";
+        // cin >> loginPassword;
+        // clearScreen();
+        // noAccount = ATM.AccountLogin(userAccountNumber, loginName, loginPassword);
+
+        cout << " " << left << setw(16) << setfill(' ') << "Username: ";
+        cout << "\n->";
         cin >> loginName;
-        cout << "Passwordd: ";
+        cout << " " << left << setw(16) << setfill(' ') << "Password: ";
+        cout << "\n->";
         cin >> loginPassword;
+
         clearScreen();
         noAccount = ATM.AccountLogin(userAccountNumber, loginName, loginPassword);
     }
@@ -251,7 +243,6 @@ void userIn(int userAccount)
             int i = userAccount;
             char loginChoice;
             table.print_table(i);
-
             ATM_list[i].AccountMenu();
             cin >> loginChoice;
             system("cls");
@@ -311,22 +302,42 @@ void userIn(int userAccount)
                     
                 case 'R':
                 {
-                    cout << "Beginning balance: SEK" << ATM_list[i].GetBeginningBalance(ATM.loggedInAccountLocation)
-                            << ".00\n";
+                    //Your beginning balance before your last operation
+                    table.print_table(i);
+                    // cout << "Beginning balance: SEK" << ATM_list[i].GetBeginningBalance(ATM.loggedInAccountLocation)
+                    //         << ".00\n";
+
+                    cout << "|" <<  left << setw(20) << setfill(' ') << "Beginning balance: "
+                             << "SEK" << left << setw(16) << setfill(' ') << ATM_list[i].GetBeginningBalance(ATM.loggedInAccountLocation)
+                             << "|" << endl;
+                    table.insert_row();
 
                     //If you deposit money last time
                     if (ATM_list[i].GetLastOperation(i) == 'D') 
                     {
-                        cout << "Deposit amount: SEK" << ATM_list[i].lastMoneyMovement << ".00" << endl;
+                        // cout << "Deposit amount: SEK" << ATM_list[i].lastMoneyMovement << ".00" << endl;
+                        
+                        cout << "|" <<  left << setw(20) << setfill(' ') << "Deposit amount: " 
+                             << "SEK" << left << setw(16) << setfill(' ') << ATM_list[i].lastMoneyMovement
+                             << "|" << endl;
+                        table.insert_row();
                     }
                     //If you withdraw money the last time
                     else if (ATM_list[i].GetLastOperation(i) == 'W')
                     {
-                        cout << "Withdrawl amount: SEK" << ATM_list[i].lastMoneyMovement << ".00" << endl;
+                        cout << "|" << left << setw(20) << setfill(' ') << "Withdrawl amount: " 
+                             << "SEK" << left << setw(16) << setfill(' ') << ATM_list[i].lastMoneyMovement 
+                             << "|" << endl;
+                        table.insert_row();
                     }
 
-                    cout << "Your balance: SEK" << ATM_list[i].GetAccountBalance(ATM.loggedInAccountLocation)
-                            << ".00\n";
+                    cout << "|" <<  left << setw(20) << setfill(' ') << "Your balance: " << "SEK" << left 
+                         << setw(16) << setfill(' ') << ATM_list[i].GetAccountBalance(ATM.loggedInAccountLocation)
+                         << "|" << endl;
+
+                    table.insert_row();
+                    system("pause");
+                    system("cls");
                     break;
                 }
                     
@@ -366,18 +377,48 @@ void createAccount()
         
 }
 
-int Table::get_max_account_number()
+void saveUsersToFile()
 {
-    int max = 0;
-    for(int cust = 0; cust < ATM_list.size(); cust++)
+    ofstream fout;
+    int firsttime = 0;
+    for (int i = 0; i < ATM_list.size(); i++)
     {
-        if(ATM_list[cust].accountNumber > max)
+        if(firsttime > 0)
         {
-            max = ATM_list[cust].accountNumber;
+            fout << endl;
         }
+        if(firsttime == 0)
+        {
+            fout.open("user_list.csv", ios::trunc);
+            firsttime = 1;
+        }
+        else if(firsttime == 1)
+        {
+            fout.close();
+            fout.open("user_list.csv", ios::app);
+            firsttime == 2;
+        }
+        
+        cout << ATM_list[i].accountNumber << "," << ATM_list[i].username << "," << ATM_list[i].password 
+             << "," << ATM_list[i].accountBalance << "," << ATM_list[i].lastMoneyMovement << "," 
+             << ATM_list[i].lastOperation << "," << ATM_list[i].beginningBalance << "\n";
+        fout << ATM_list[i].accountNumber << "," << ATM_list[i].username << "," << ATM_list[i].password 
+             << "," << ATM_list[i].accountBalance << "," << ATM_list[i].lastMoneyMovement << "," 
+             << ATM_list[i].lastOperation << "," << ATM_list[i].beginningBalance;
+        
+        
+        _sleep(1000);
     }
-    return max;
+    fout.close();
+
 }
+
+void clearScreen()
+{
+    system("cls");
+}
+
+
 
 /*Funktions in struct Autotellermachine*/
 bool AutoTellerMachine::AccountLogin(int loginUserAccountNumber, string loginUsername, string loginPassword)
@@ -521,30 +562,59 @@ string AutoTellerMachine::GetUsername(int accountID) const
     return ATM_list[accountID].username;
 }
 
+/*END Funktions in struct Autotellermachine*/
 
 //Funktions for Table
 
 void Table::print_table(int accountNum)
 {
-    cout << "|" << right << setfill('=') << setw(30) << "|" << endl
-         << "| " << left << setfill(' ') << setw(28) << ATM_list[accountNum].accountNumber << "|" << endl
-         << "| " << left << setfill(' ') << setw(28) << ATM_list[accountNum].username << "|" << endl
-         << "| " << left << setw(10) << "Balance: " << left << setw(18) << ATM_list[accountNum].accountBalance << "|" << endl
-         << "|" << right << setfill('=') << setw(30) << "|" << endl;
+    cout << "|" << right << setfill('=') << setw(40) << "|" << endl
+         << "| " << left << setfill(' ') << setw(10) << "Account: " << left << setw(28) << ATM_list[accountNum].accountNumber << "|" << endl 
+         << "| " << left << setw(10) << "User: " << left << setw(28) << ATM_list[accountNum].username << "|" << endl
+        //  << "| " << left << setfill(' ') << setw(28) << ATM_list[accountNum].accountNumber << "|" << endl
+        //  << "| " << left << setfill(' ') << setw(28) << ATM_list[accountNum].username << "|" << endl
+         << "| " << left << setw(10) << "Balance: " << left << setw(28) << ATM_list[accountNum].accountBalance << "|" << endl
+         << "|" << right << setfill('=') << setw(40) << "|" << endl;
 }
+
+int Table::get_max_account_number()
+{
+    int max = 0;
+    for(int cust = 0; cust < ATM_list.size(); cust++)
+    {
+        if(ATM_list[cust].accountNumber > max)
+        {
+            max = ATM_list[cust].accountNumber;
+        }
+    }
+    return max;
+}
+
+void Table::insert_row()
+{
+    cout << "|" << right << setfill('-') << setw(40) << "|" << endl;
+}
+
+//END Funktions for Table
 
 //Funktions for Interface
 
 void Interface::show_options()
 {
-    cout << "Welcome to the ATM Machine\n\n"
-         "Please select an option below\n[l] Log in\n[c] Create new acount\n[q] Quit\n";
+    cout << "Please select an option below\n[l] Log in\n[c] Create new acount\n[q] Quit\n";
 }
 
 
-// void Interface::show_header()
-// {
+void Interface::show_header()
+{
+    cout << "|" << right << setfill('=') << setw(50) << "|" << endl
+         << "|" << right << setfill(' ') << setw(50) << "|" << endl
+         << "|" << left << setfill(' ') << setw(9) << " " << right 
+         << setw(20) << "Welcome to Melina's ATM machine" << right << setw(10) << "|" << endl
+         << "|" << right << setfill(' ') << setw(50) << "|" << endl
+         << "|" << right << setfill('=') << setw(50) << "|" << endl;
+}
 
-// }
+//END Funktions for Interface
 
 /*FUNKTIONS END*/
